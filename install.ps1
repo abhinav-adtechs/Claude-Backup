@@ -25,6 +25,16 @@ param(
     [switch]$Check
 )
 
+# Stop on the first error (e.g. a missing source file) instead of
+# carrying on and writing empty skill files (see issue #3).
+$ErrorActionPreference = 'Stop'
+
+# Resolve source paths relative to this script, not the current
+# directory, so the installer works from any directory.
+$ResumeSkillSource    = Join-Path (Join-Path $PSScriptRoot "skill") "SKILL.md"
+$ScheduledSkillSource = Join-Path (Join-Path $PSScriptRoot "scheduled-task") "SKILL.md"
+$GitignoreTemplate    = Join-Path $PSScriptRoot "vault-gitignore.template"
+
 $ClaudeDir    = Join-Path $env:USERPROFILE ".claude"
 $SkillDir     = Join-Path $ClaudeDir "vault-resume"
 $ScheduledDir = Join-Path $env:USERPROFILE "Documents\Claude\Scheduled\session-backup"
@@ -69,7 +79,7 @@ Write-Host ""
 # Warn if reinstalling
 $existingSkill = Join-Path $SkillDir "SKILL.md"
 if (Test-Path $existingSkill) {
-    Write-Host "  Existing installation found — updating..."
+    Write-Host "  Existing installation found - updating..."
 }
 
 # Helper: substitute vault path placeholder and write file
@@ -84,19 +94,32 @@ function Install-SkillFile {
     Set-Content -Path $DestPath -Value $content -Encoding UTF8 -NoNewline
 }
 
+# Fail fast if a skill source is missing, before creating any folders
+# or writing (possibly empty) skill files.
+foreach ($src in @($ResumeSkillSource, $ScheduledSkillSource)) {
+    if (-not (Test-Path $src)) {
+        Write-Error "Missing source file: $src"
+        exit 1
+    }
+}
+
 # Install the resume skill
-Install-SkillFile -SourcePath "skill\SKILL.md" -DestPath (Join-Path $SkillDir "SKILL.md")
+Install-SkillFile -SourcePath $ResumeSkillSource -DestPath (Join-Path $SkillDir "SKILL.md")
 Write-Host "  Resume skill installed to: $SkillDir"
 
 # Install the scheduled backup task
-Install-SkillFile -SourcePath "scheduled-task\SKILL.md" -DestPath (Join-Path $ScheduledDir "SKILL.md")
+Install-SkillFile -SourcePath $ScheduledSkillSource -DestPath (Join-Path $ScheduledDir "SKILL.md")
 Write-Host "  Scheduled task installed to: $ScheduledDir"
 
 # Install .gitignore template to vault directory (only on first install)
 $vaultGitignore = Join-Path $VaultPath ".gitignore"
 if (-not (Test-Path $vaultGitignore)) {
+    if (-not (Test-Path $GitignoreTemplate)) {
+        Write-Error "Missing source file: $GitignoreTemplate"
+        exit 1
+    }
     New-Item -ItemType Directory -Force -Path $VaultPath | Out-Null
-    Copy-Item "vault-gitignore.template" $vaultGitignore
+    Copy-Item $GitignoreTemplate $vaultGitignore
     Write-Host "  Security: .gitignore installed to $VaultPath"
 }
 
@@ -105,11 +128,11 @@ $skillFile     = Join-Path $SkillDir "SKILL.md"
 $scheduledFile = Join-Path $ScheduledDir "SKILL.md"
 
 if (-not (Test-Path $skillFile)) {
-    Write-Error "Resume skill install failed — $skillFile not found"
+    Write-Error "Resume skill install failed - $skillFile not found"
     exit 1
 }
 if (-not (Test-Path $scheduledFile)) {
-    Write-Error "Scheduled task install failed — $scheduledFile not found"
+    Write-Error "Scheduled task install failed - $scheduledFile not found"
     exit 1
 }
 

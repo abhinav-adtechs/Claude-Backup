@@ -1,6 +1,10 @@
 #!/bin/bash
 set -e
 
+# Resolve source paths relative to this script, not the current directory,
+# so the installer works from any directory (see issue #3).
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 CLAUDE_DIR="$HOME/.claude"
 SKILL_DIR="$CLAUDE_DIR/vault-resume"
 
@@ -47,6 +51,15 @@ fi
 # Allow custom vault location: ./install.sh /path/to/my/vault
 VAULT_DIR="${1:-$DEFAULT_VAULT}"
 
+# Fail fast if a source file is missing, before creating any folders
+# or writing (possibly empty) skill files.
+for src in "$SCRIPT_DIR/skill/SKILL.md" "$SCRIPT_DIR/scheduled-task/SKILL.md" "$SCRIPT_DIR/vault-gitignore.template"; do
+  if [[ ! -f "$src" ]]; then
+    echo "ERROR: Missing source file: $src" >&2
+    exit 1
+  fi
+done
+
 echo "Installing Claude-Backup..."
 echo "  OS:             $OSTYPE"
 echo "  Vault location: $VAULT_DIR"
@@ -59,18 +72,18 @@ fi
 
 # Install the resume skill (with vault path substituted)
 mkdir -p "$SKILL_DIR"
-sed "s|~/Documents/ClaudeVault/|$VAULT_DIR/|g" skill/SKILL.md > "$SKILL_DIR/SKILL.md"
+sed "s|~/Documents/ClaudeVault/|$VAULT_DIR/|g" "$SCRIPT_DIR/skill/SKILL.md" > "$SKILL_DIR/SKILL.md"
 echo "  Resume skill installed to: $SKILL_DIR"
 
 # Install the scheduled backup task (with vault path substituted)
 mkdir -p "$SCHEDULED_DIR"
-sed "s|~/Documents/ClaudeVault/|$VAULT_DIR/|g" scheduled-task/SKILL.md > "$SCHEDULED_DIR/SKILL.md"
+sed "s|~/Documents/ClaudeVault/|$VAULT_DIR/|g" "$SCRIPT_DIR/scheduled-task/SKILL.md" > "$SCHEDULED_DIR/SKILL.md"
 echo "  Scheduled task installed to: $SCHEDULED_DIR"
 
 # Install .gitignore template to vault directory (only on first install)
 if [[ ! -f "$VAULT_DIR/.gitignore" ]]; then
   mkdir -p "$VAULT_DIR"
-  cp vault-gitignore.template "$VAULT_DIR/.gitignore"
+  cp "$SCRIPT_DIR/vault-gitignore.template" "$VAULT_DIR/.gitignore"
   echo "  Security: .gitignore installed to $VAULT_DIR"
 fi
 

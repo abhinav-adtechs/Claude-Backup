@@ -5,6 +5,10 @@ All notable changes to Claude-Backup are documented here. The format is based on
 
 ## [Unreleased]
 
+### Fixed
+
+- `install.sh` and `install.ps1` now resolve their source files relative to the installer itself, so they work from any directory; a missing source file now stops the install with an error instead of silently writing an empty `SKILL.md`.
+
 ### Added
 
 - A rewritten README with per-OS install instructions, an architecture diagram and a configuration reference.

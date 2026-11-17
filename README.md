@@ -214,10 +214,8 @@ cd Claude-Backup
 > ```
 
 > [!NOTE]
-> Windows PowerShell 5.1 reads scripts saved without a byte-order mark in the system code page, and `install.ps1`
-> contains a few non-ASCII characters. If 5.1 reports a parse error, run the installer with PowerShell 7 instead:
-> `pwsh -File .\install.ps1`. The installer writes the vault path with forward slashes inside the skills
-> (`C:/Users/you/...`), which is expected.
+> `install.ps1` is ASCII-only, so Windows PowerShell 5.1 parses it whatever the system code page. The installer
+> writes the vault path with forward slashes inside the skills (`C:/Users/you/...`), which is expected.
 
 </details>
 
@@ -244,9 +242,9 @@ chmod +x install.sh
 
 </details>
 
-> [!IMPORTANT]
-> Run the installer from inside the cloned `Claude-Backup` folder: it reads `skill/`, `scheduled-task/` and
-> `vault-gitignore.template` relative to the current directory.
+> [!NOTE]
+> You can run the installer from any directory: it finds `skill/`, `scheduled-task/` and
+> `vault-gitignore.template` relative to the installer itself, not the current directory.
 
 ### Run the first backup
 
@@ -475,9 +473,10 @@ spaces in paths is on the [roadmap](#roadmap)).
 </details>
 
 <details>
-<summary><b><code>install.sh</code> or <code>install.ps1</code> can't find <code>skill/SKILL.md</code></b></summary>
+<summary><b><code>install.sh</code> or <code>install.ps1</code> reports a missing source file</b></summary>
 
-- Run the installer from inside the cloned `Claude-Backup` folder (`cd Claude-Backup` first)
+- The installer now resolves its sources relative to its own location, so the working directory no longer matters
+- A missing source means the clone is incomplete: re-clone the repository and try again
 
 </details>
 
