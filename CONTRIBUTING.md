@@ -56,6 +56,10 @@ $env:USERPROFILE = Join-Path ([System.IO.Path]::GetTempPath()) "cb-home"   # onl
 .\install.ps1 -Uninstall
 ```
 
+CI runs this same scenario on `windows-latest` in both Windows PowerShell 5.1 and PowerShell 7 (the `install-ps1`
+job in `.github/workflows/ci.yml`). It also checks that both installed `SKILL.md` files start with `---` (no BOM) and
+that the vault's `.gitignore` is still there after uninstalling.
+
 ### Test a change to the backup task or a skill
 
 1. Install into a test vault, for example `./install.sh ~/ClaudeVault-test`. This replaces the installed task and

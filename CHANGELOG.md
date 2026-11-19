@@ -11,6 +11,9 @@ All notable changes to Claude-Backup are documented here. The format is based on
 - `CONTRIBUTING.md`, this changelog and `docs/ARCHITECTURE.md`.
 - CI: an `install.sh` smoke test on macOS and Ubuntu that installs into a throwaway home with a custom vault path,
   checks the path substitution, and uninstalls without touching the vault.
+- CI: an `install.ps1` smoke test on Windows that runs the same scenario in Windows PowerShell 5.1 and PowerShell 7,
+  checks that both installed `SKILL.md` files start with `---` (no BOM), and that the vault's `.gitignore` survives
+  uninstalling.
 
 ## [1.2.0] - 2026-04-13
 
